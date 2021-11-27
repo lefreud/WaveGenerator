@@ -30,6 +30,7 @@ SOFTWARE.
 /* Includes */
 #include "stm32f4xx.h"
 #include "uart.h"
+#include "dac.h"
 
 /* Private macro */
 /* Private variables */
@@ -46,13 +47,20 @@ SOFTWARE.
 int main(void)
 {
   uart_init_uart();
+  dac_init();
 
   char latest_byte;
+  uint32_t dac_values[4] = {0, 1000, 2000, 3000};
+  uint32_t i = 0;
+  volatile uint32_t j;
 
   while (1)
   {
+	  i = (i + 1) % 4;
+	  dac_value(dac_values[i]);
 	  if (uart_get_received_byte(&latest_byte)) {
 		  // Treat the received byte;
 	  }
+	  for(j = 0; j < 1000000; j++);
   }
 }
