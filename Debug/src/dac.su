@@ -1,2 +1,0 @@
-dac.c:6:6:dac_init	4	static
-dac.c:14:6:dac_value	16	static
