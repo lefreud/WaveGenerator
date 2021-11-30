@@ -6,7 +6,7 @@ typedef enum {
 	DONE
 } command_parser_state_t;
 
-#define COMMAND_BUFFER_SIZE (2 + SAMPLES_BUFFER_SIZE)
+#define COMMAND_BUFFER_SIZE (2 + SAMPLES_BUFFER_SIZE * 2)
 
 
 /*
@@ -70,6 +70,7 @@ static void feed_watchdog() {
 }
 
 int command_parser_get_latest_waveform(waveform_t* latest_waveform) {
-	latest_waveform = (waveform_t *) command_buffer;
-	return state == DONE;
+	if (state == DONE) {
+		memcpy(latest_waveform, command_buffer, COMMAND_BUFFER_SIZE);
+	}
 }

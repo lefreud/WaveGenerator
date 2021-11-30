@@ -31,6 +31,8 @@ SOFTWARE.
 #include "stm32f4xx.h"
 #include "uart.h"
 #include "dac.h"
+#include "command_parser.h"
+#include "waveform.h"
 
 /* Private macro */
 /* Private variables */
@@ -53,14 +55,19 @@ int main(void)
   uint32_t dac_values[4] = {0, 1000, 2000, 3000};
   uint32_t i = 0;
   volatile uint32_t j;
+  waveform_t wave = {
+	  .used_size = 0
+  };
 
   while (1)
   {
 	  i = (i + 1) % 4;
 	  dac_value(dac_values[i]);
 	  if (uart_get_received_byte(&latest_byte)) {
-		  // Treat the received byte;
+		  command_parser_push_byte(latest_byte);
+		  command_parser_get_latest_waveform(&wave);
 	  }
-	  for(j = 0; j < 1000000; j++);
+
+	  // for(j = 0; j < 1000000; j++);
   }
 }
