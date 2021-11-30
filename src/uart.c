@@ -4,8 +4,8 @@
 
 #define CIRCULAR_BUFFER_SIZE 20
 
-#define USART_FLAG_TXE BIT7 // transmit buffer empty
-#define USART_FLAG_RXNE BIT5 // receive buffer not empty
+#define _USART_FLAG_TXE BIT7 // transmit buffer empty
+#define _USART_FLAG_RXNE BIT5 // receive buffer not empty
 
 // baud rate
 #define BAUD_RATE_MANTISSA 43
@@ -15,7 +15,6 @@ static uint8_t circular_buffer[CIRCULAR_BUFFER_SIZE];
 
 static int head = 0;
 static int tail = 0;
-static int bytesReceived = 0;
 
 /*
  * INTERRUPT HANDLER
@@ -23,7 +22,7 @@ static int bytesReceived = 0;
 
 void USART2_IRQHandler()
 {
-	if (USART2->SR & USART_FLAG_RXNE) {
+	if (USART2->SR & _USART_FLAG_RXNE) {
 		circular_buffer[head] = USART2->DR;
 		head = (head + 1) % CIRCULAR_BUFFER_SIZE;
 	}
@@ -73,7 +72,7 @@ int uart_get_received_byte(char* buffer) {
 
 void uart_transmit_echo() {
 	if (head != tail) {
-		while (!(USART2->SR & USART_FLAG_TXE));
+		while (!(USART2->SR & _USART_FLAG_TXE));
 		USART2->DR = circular_buffer[tail];
 		tail = (tail + 1) % CIRCULAR_BUFFER_SIZE;
 	}
