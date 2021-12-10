@@ -1,4 +1,5 @@
 #include "command_parser.h"
+#include "string.h"
 
 typedef enum {
 	READY,
@@ -73,4 +74,5 @@ int command_parser_get_latest_waveform(waveform_t* latest_waveform) {
 	if (state == DONE) {
 		memcpy(latest_waveform, command_buffer, COMMAND_BUFFER_SIZE);
 	}
+	return 0;
 }

@@ -4,6 +4,8 @@
 
 
 void dac_init(){
+	// uses pin PA4
+
 	RCC->AHB1ENR |= BIT0; // GPIOA clock enable
 	RCC->APB1ENR |= BIT29; // DAC clock enable
 	DAC->CR |= BIT0; // Enable DAC1

@@ -33,6 +33,7 @@ SOFTWARE.
 #include "dac.h"
 #include "command_parser.h"
 #include "waveform.h"
+#include "dma.h"
 
 /* Private macro */
 /* Private variables */
@@ -50,6 +51,7 @@ int main(void)
 {
   uart_init_uart();
   dac_init();
+  dma_init();
 
   char latest_byte;
   uint32_t i = 0;
