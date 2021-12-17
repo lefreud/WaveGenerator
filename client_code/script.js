@@ -8,8 +8,12 @@ const MAX_SAMPLES = 8192;
 const DMA_FREQUENCY = 1000; // Hz
 const MAX_DAC_VALUE = 0x0FFF; // 12 bits DAC
 
+const WAVEFORM_CANVAS_WIDTH = 400;
+const WAVEFORM_CANVAS_HEIGHT = 100;
+
 let waveformTypeElement = () => document.getElementById("waveform-type");
-let errorMessagesElement = document.getElementById("error-messages");
+let errorMessagesElement = () => document.getElementById("error-messages");
+let waveformCanvasElement = () => document.getElementById("waveform-canvas");
 let writer = null;
 
 let selectedSampleCount = getFrequencies()[0][0];
@@ -21,7 +25,7 @@ function init() {
     if ("serial" in navigator){
 
     } else {
-        errorMessagesElement.innerText = "Votre navigateur ne supporte pas Web Serial API. Veuillez utiliser une" +
+        errorMessagesElement().innerText = "Votre navigateur ne supporte pas Web Serial API. Veuillez utiliser une" +
             "version récente de Chrome, Firefox ou Edge.";
     }
 }
@@ -37,26 +41,25 @@ async function connect() {
 }
 
 async function uploadWaveform(selectedSampleCount) {
+    let waveform = null;
+    switch (waveformTypeElement().value) {
+        case "square":
+            waveform = getSquareWaveform();
+            break;
+        case "triangle":
+            waveform = getTriangleWaveform();
+            break;
+    }
+    displayWaveform(waveform);
     if (writer) {
         const usedSize = selectedSampleCount;
         const commandBuffer = new ArrayBuffer(COMMAND_BUFFER_SIZE);
         const commandBufferView = new DataView(commandBuffer, 0);
         commandBufferView.setUint16(0, usedSize, LITTLE_ENDIAN_MODE);
 
-
-        let waveform = null;
-        switch (waveformTypeElement().value) {
-            case "square":
-                waveform = getSquareWaveform();
-                break;
-            case "triangle":
-                waveform = getTriangleWaveform();
-                break;
-        }
         for (let i = 0; i < waveform.length; i++) {
             commandBufferView.setUint16(2 + i * 2, waveform[i], LITTLE_ENDIAN_MODE);
         }
-
         debugger
         await writer.write(new Uint8Array([START_BYTE]));
         await writer.write(new Uint8Array(commandBuffer));
@@ -111,4 +114,29 @@ function getTriangleWaveform() {
         waveform.push(Math.floor(MAX_DAC_VALUE * (halfPeriod - i) / halfPeriod));
     }
     return waveform;
+}
+
+/**
+ * Display
+ */
+
+document.addEventListener("DOMContentLoaded", () => {
+    waveformCanvasElement().height = WAVEFORM_CANVAS_HEIGHT;
+    waveformCanvasElement().width = WAVEFORM_CANVAS_WIDTH;
+})
+
+function displayWaveform(waveform) {
+    const context = waveformCanvasElement().getContext("2d");
+    context.clearRect(0, 0, WAVEFORM_CANVAS_WIDTH, WAVEFORM_CANVAS_HEIGHT);
+    context.beginPath();
+    context.imageSmoothingEnabled = false;
+    context.strokeStyle = "#ff7600";
+    context.fillStyle = "#d9d9d9";
+    context.lineWidth = 3;
+    for (let i = 0; i < waveform.length - 1; i++) {
+        context.moveTo(WAVEFORM_CANVAS_WIDTH * i / MAX_SAMPLES, WAVEFORM_CANVAS_HEIGHT * waveform[i] / MAX_DAC_VALUE);
+        context.lineTo(WAVEFORM_CANVAS_WIDTH * (i + 1) / MAX_SAMPLES, WAVEFORM_CANVAS_HEIGHT * waveform[i + 1] / MAX_DAC_VALUE);
+    }
+    context.fillRect(0, 0, WAVEFORM_CANVAS_WIDTH * waveform.length / MAX_SAMPLES, WAVEFORM_CANVAS_HEIGHT)
+    context.stroke();
 }

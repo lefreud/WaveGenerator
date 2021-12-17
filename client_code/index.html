@@ -4,21 +4,30 @@
     <meta charset="UTF-8">
     <title>Waveform generator</title>
     <script src="script.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body onload="init()">
-    <button onclick="connect()">Connecter</button><br>
+    <div class="wrapper">
+        <button onclick="connect()">Connecter</button><br>
 
-    <label for="waveform-type">Forme d'onde:</label>
-    <select name="waveform-type" id="waveform-type">
-        <option value="square">Carré</option>
-        <option value="triangle">Triangle</option>
-        <option value="sine">Sinus</option>
-    </select><br>
+        <label for="waveform-type">Forme d'onde:
+            <select name="waveform-type" id="waveform-type">
+                <option value="square">Carré</option>
+                <option value="triangle">Triangle</option>
+                <option value="sine">Sinus</option>
+            </select>
+        </label><br>
 
-    <label for="waveform-frequency">Fréquence:</label>
-    <select name="waveform-frequency" id="waveform-frequency" onload="initFrequencies()"></select><br>
+        <label for="waveform-frequency">Fréquence:
+            <select name="waveform-frequency" id="waveform-frequency" onload="initFrequencies()"></select>
+        </label><br>
 
-    <button onclick="uploadWaveform(selectedSampleCount)">Téléverser la forme d'onde</button>
-    <p id="error-messages"></p>
+        <button onclick="uploadWaveform(selectedSampleCount)">Téléverser la forme d'onde</button>
+        <p id="error-messages"></p>
+
+        <canvas id="waveform-canvas" class="waveform-canvas">
+            Your browser doesn't support HTML canvas for displaying the waveform.
+        </canvas>
+    </div>
 </body>
 </html>
