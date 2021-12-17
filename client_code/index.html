@@ -27,6 +27,8 @@
                 <select name="waveform-frequency" id="waveform-frequency" onload="initFrequencies()"></select>
             </label><br>
 
+                <label for="min-voltage">Tension min.: <input type="number" id="min-voltage" min="0" max="2.68" step="0.1" value="0" /></label><br>
+                <label for="max-voltage">Tension max.: <input type="number" id="max-voltage" min="0" max="2.68" step="0.1" value="2.68" /></label><br>
             <button onclick="uploadWaveform(selectedSampleCount)" id="upload-button">Téléverser la forme d'onde</button>
                 <div id="upload-message" style="display: none">Téleversement en cours...</div>
             <p id="error-messages"></p>

@@ -8,6 +8,8 @@ const MAX_SAMPLES = 8192;
 const DMA_FREQUENCY = 100000; // Hz
 const MAX_DAC_VALUE = 0x0FFF; // 12 bits DAC
 
+const MAX_VOLTAGE = 2.68;
+
 const WAVEFORM_CANVAS_WIDTH = 400;
 const WAVEFORM_CANVAS_HEIGHT = 100;
 
@@ -19,6 +21,9 @@ let connectWrapperElement = () => document.getElementById("connect-wrapper");
 let configWrapperElement = () => document.getElementById("config-wrapper");
 let uploadButtonElement = () => document.getElementById("upload-button");
 let uploadMessageElement = () => document.getElementById("upload-message");
+
+let minVoltageElement = () => document.getElementById("min-voltage");
+let maxVoltageElement = () => document.getElementById("max-voltage");
 let port = null;
 
 let selectedSampleCount = getFrequencies()[0][0];
@@ -74,7 +79,7 @@ async function uploadWaveform(selectedSampleCount) {
 
     if (port) {
         const writer = port.writable.getWriter();
-        const usedSize = selectedSampleCount;
+        const usedSize = waveform.length;
         const commandBuffer = new ArrayBuffer(COMMAND_BUFFER_SIZE);
         const commandBufferView = new DataView(commandBuffer, 0);
         commandBufferView.setUint16(0, usedSize, LITTLE_ENDIAN_MODE);
@@ -82,7 +87,6 @@ async function uploadWaveform(selectedSampleCount) {
         for (let i = 0; i < waveform.length; i++) {
             commandBufferView.setUint16(2 + i * 2, waveform[i], LITTLE_ENDIAN_MODE);
         }
-        debugger
         await writer.write(new Uint8Array([START_BYTE]));
         await writer.write(new Uint8Array(commandBuffer));
         writer.releaseLock();
@@ -122,10 +126,10 @@ function getFrequencies() {
 function getSquareWaveform() {
     let waveform = [];
     for (let i = 0; i < Math.floor(selectedSampleCount / 2); i++) {
-        waveform.push(MAX_DAC_VALUE);
+        waveform.push(getDacValue(1));
     }
     for (let i = Math.floor(selectedSampleCount / 2); i < selectedSampleCount; i++) {
-        waveform.push(0x0000);
+        waveform.push(getDacValue(0));
     }
     return waveform;
 }
@@ -134,20 +138,25 @@ function getTriangleWaveform() {
     let waveform = [];
     const halfPeriod = Math.floor(selectedSampleCount / 2);
     for (let i = 0; i < halfPeriod; i++) {
-        waveform.push(Math.floor(MAX_DAC_VALUE * i / halfPeriod));
+        waveform.push(getDacValue(i / halfPeriod));
     }
     for (let i = 0; i < halfPeriod; i++) {
-        waveform.push(Math.floor(MAX_DAC_VALUE * (halfPeriod - i) / halfPeriod));
+        waveform.push(getDacValue((halfPeriod - i) / halfPeriod));
     }
+    console.log(waveform)
     return waveform;
 }
 
 function getSineWaveform() {
     let waveform = [];
     for (let i = 0; i < selectedSampleCount; i++) {
-        waveform.push(MAX_DAC_VALUE / 2 + MAX_DAC_VALUE / 2 * Math.sin(i * 2 * Math.PI / selectedSampleCount))
+        waveform.push(getDacValue(0.5 + 0.5 * Math.sin(i * 2 * Math.PI / selectedSampleCount)))
     }
     return waveform;
+}
+
+function getDacValue(value) {
+    return Math.floor(MAX_DAC_VALUE * (parseFloat(minVoltageElement().value) + (parseFloat(maxVoltageElement().value) - parseFloat(minVoltageElement().value)) * value) / MAX_VOLTAGE);
 }
 
 /**
@@ -168,8 +177,8 @@ function displayWaveform(waveform) {
     context.fillStyle = "#d9d9d9";
     context.lineWidth = 3;
     for (let i = 0; i < waveform.length - 1; i++) {
-        context.moveTo(WAVEFORM_CANVAS_WIDTH * i / MAX_SAMPLES, WAVEFORM_CANVAS_HEIGHT * waveform[i] / MAX_DAC_VALUE);
-        context.lineTo(WAVEFORM_CANVAS_WIDTH * (i + 1) / MAX_SAMPLES, WAVEFORM_CANVAS_HEIGHT * waveform[i + 1] / MAX_DAC_VALUE);
+        context.moveTo(WAVEFORM_CANVAS_WIDTH * i / MAX_SAMPLES, WAVEFORM_CANVAS_HEIGHT - WAVEFORM_CANVAS_HEIGHT * waveform[i] / MAX_DAC_VALUE);
+        context.lineTo(WAVEFORM_CANVAS_WIDTH * (i + 1) / MAX_SAMPLES, WAVEFORM_CANVAS_HEIGHT - WAVEFORM_CANVAS_HEIGHT * waveform[i + 1] / MAX_DAC_VALUE);
     }
     context.fillRect(0, 0, WAVEFORM_CANVAS_WIDTH * waveform.length / MAX_SAMPLES, WAVEFORM_CANVAS_HEIGHT)
     context.stroke();
