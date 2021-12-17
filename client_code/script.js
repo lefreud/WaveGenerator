@@ -5,7 +5,7 @@ const LITTLE_ENDIAN_MODE = true;
 
 const MIN_SAMPLES = 20;
 const MAX_SAMPLES = 8192;
-const DMA_FREQUENCY = 1000; // Hz
+const DMA_FREQUENCY = 100000; // Hz
 const MAX_DAC_VALUE = 0x0FFF; // 12 bits DAC
 
 const WAVEFORM_CANVAS_WIDTH = 400;
@@ -14,6 +14,11 @@ const WAVEFORM_CANVAS_HEIGHT = 100;
 let waveformTypeElement = () => document.getElementById("waveform-type");
 let errorMessagesElement = () => document.getElementById("error-messages");
 let waveformCanvasElement = () => document.getElementById("waveform-canvas");
+
+let connectWrapperElement = () => document.getElementById("connect-wrapper");
+let configWrapperElement = () => document.getElementById("config-wrapper");
+let uploadButtonElement = () => document.getElementById("upload-button");
+let uploadMessageElement = () => document.getElementById("upload-message");
 let port = null;
 
 let selectedSampleCount = getFrequencies()[0][0];
@@ -37,9 +42,15 @@ async function connect() {
         dataBits: 8,
         parity: "none"
     })
+    connectWrapperElement().style.display = "none";
+    configWrapperElement().style.display = "flex";
 }
 
 async function uploadWaveform(selectedSampleCount) {
+    // lock
+    uploadButtonElement().disabled = "true"
+    uploadMessageElement().style.display = "block"
+
     // generate
     let waveform;
     switch (waveformTypeElement().value) {
@@ -76,6 +87,10 @@ async function uploadWaveform(selectedSampleCount) {
         await writer.write(new Uint8Array(commandBuffer));
         writer.releaseLock();
     }
+
+    // unlock
+    uploadButtonElement().disabled = ""
+    uploadMessageElement().style.display = "none"
 }
 
 /**
@@ -98,7 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function getFrequencies() {
     let frequencies = [];
-    for (let sampleCount = MIN_SAMPLES; sampleCount <= MAX_SAMPLES; sampleCount+=1000) {
+    for (let sampleCount = MIN_SAMPLES; sampleCount <= MAX_SAMPLES; sampleCount = Math.floor(sampleCount * 1.25)) {
         frequencies.push([sampleCount, (DMA_FREQUENCY / sampleCount)]);
     }
     return frequencies;

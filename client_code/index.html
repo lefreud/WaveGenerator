@@ -8,26 +8,34 @@
 </head>
 <body onload="init()">
     <div class="wrapper">
-        <button onclick="connect()">Connecter</button><br>
+        <h1>Générateur de formes d'ondes</h1>
 
-        <label for="waveform-type">Forme d'onde:
-            <select name="waveform-type" id="waveform-type">
-                <option value="square">Carré</option>
-                <option value="triangle">Triangle</option>
-                <option value="sine">Sinus</option>
-            </select>
-        </label><br>
+        <div id="connect-wrapper">
+            <button onclick="connect()">Connecter</button><br>
+        </div>
 
-        <label for="waveform-frequency">Fréquence:
-            <select name="waveform-frequency" id="waveform-frequency" onload="initFrequencies()"></select>
-        </label><br>
+            <div id="config-wrapper" class="config-wrapper" style="display: none">
+            <label for="waveform-type">Forme d'onde:
+                <select name="waveform-type" id="waveform-type">
+                    <option value="square">Carré</option>
+                    <option value="triangle">Triangle</option>
+                    <option value="sine">Sinus</option>
+                </select>
+            </label><br>
 
-        <button onclick="uploadWaveform(selectedSampleCount)">Téléverser la forme d'onde</button>
-        <p id="error-messages"></p>
+            <label for="waveform-frequency">Fréquence:
+                <select name="waveform-frequency" id="waveform-frequency" onload="initFrequencies()"></select>
+            </label><br>
 
-        <canvas id="waveform-canvas" class="waveform-canvas">
-            Your browser doesn't support HTML canvas for displaying the waveform.
-        </canvas>
+            <button onclick="uploadWaveform(selectedSampleCount)" id="upload-button">Téléverser la forme d'onde</button>
+                <div id="upload-message" style="display: none">Téleversement en cours...</div>
+            <p id="error-messages"></p>
+
+            <canvas id="waveform-canvas" class="waveform-canvas">
+                Your browser doesn't support HTML canvas for displaying the waveform.
+            </canvas>
+        </div>
+
     </div>
 </body>
 </html>
