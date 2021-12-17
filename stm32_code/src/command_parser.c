@@ -36,7 +36,6 @@ static void feed_watchdog();
  */
 
 void command_parser_init() {
-	command_buffer_index = 0;
 
 	// TODO: start watchdog timer
 	init_watchdog();
@@ -60,6 +59,7 @@ void command_parser_start() {
 				state = READY;
 				break;
 			case READY:
+				command_buffer_index = 0;
 				if (uart_get_received_byte(&latest_byte)) {
 					if (latest_byte == START_BYTE) {
 						state = STOP_DMA;

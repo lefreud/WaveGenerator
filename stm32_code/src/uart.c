@@ -2,7 +2,7 @@
 #include "stm32f4xx.h"
 #include "macro_utiles.h"
 
-#define CIRCULAR_BUFFER_SIZE 20
+#define CIRCULAR_BUFFER_SIZE 200
 
 #define _USART_FLAG_TXE BIT7 // transmit buffer empty
 #define _USART_FLAG_RXNE BIT5 // receive buffer not empty

@@ -14,7 +14,7 @@ const WAVEFORM_CANVAS_HEIGHT = 100;
 let waveformTypeElement = () => document.getElementById("waveform-type");
 let errorMessagesElement = () => document.getElementById("error-messages");
 let waveformCanvasElement = () => document.getElementById("waveform-canvas");
-let writer = null;
+let port = null;
 
 let selectedSampleCount = getFrequencies()[0][0];
 
@@ -31,13 +31,12 @@ function init() {
 }
 
 async function connect() {
-    const port = await navigator.serial.requestPort(); // TODO: add filters
+    port = await navigator.serial.requestPort(); // TODO: add filters
     await port.open({
         baudRate: 19200,
         dataBits: 8,
         parity: "none"
     })
-    writer = port.writable.getWriter();
 }
 
 async function uploadWaveform(selectedSampleCount) {
@@ -61,7 +60,9 @@ async function uploadWaveform(selectedSampleCount) {
     displayWaveform(waveform);
 
     // send data
-    if (writer) {
+
+    if (port) {
+        const writer = port.writable.getWriter();
         const usedSize = selectedSampleCount;
         const commandBuffer = new ArrayBuffer(COMMAND_BUFFER_SIZE);
         const commandBufferView = new DataView(commandBuffer, 0);

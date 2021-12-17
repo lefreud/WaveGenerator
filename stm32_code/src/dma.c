@@ -1,8 +1,9 @@
 #include "stm32f4xx.h"
 #include "macro_utiles.h"
 #include "waveform.h"
+#include "dma.h"
 
-#define TIM2_PERIOD_SECONDS			0.5
+#define TIM2_PERIOD_SECONDS			1 / 100000
 #define TIM2_PREVIOUS_PRESCALERS 	2
 #define TIM2_PRESCALER 				1
 #define TIM2_AUTO_RELOAD			(SystemCoreClock / (TIM2_PREVIOUS_PRESCALERS * TIM2_PRESCALER)) * TIM2_PERIOD_SECONDS
@@ -39,7 +40,7 @@ void dma_init(waveform_t* p_waveform) {
 	 */
 	RCC->APB1ENR |= BIT0; // enable TIM2 clock
 	TIM2->PSC = TIM2_PRESCALER - 1;
-	TIM2->ARR = (TIM2_AUTO_RELOAD - 1)/500; //TODO: find correct value
+	TIM2->ARR = TIM2_AUTO_RELOAD - 1;
 	NVIC->ISER[0] |= BIT28; // TIM2 global interrupt
 	TIM2->DIER |=
 			BIT14 // Trigger DMA request enable
@@ -64,16 +65,10 @@ void dma_init(waveform_t* p_waveform) {
 			(BIT25 | BIT26) // Channel 3 selection
 			| BIT16 // medium priority
 			| BIT13 // 16 bit words on memory
-			| BIT12 // 32 bits words on peripheral
+			| BIT11 // 16 bits words on peripheral
 			| BIT10 // Memory pointer incremented after each transfer
 			| BIT8 // circular mode enabled
 			| BIT6 // Memory to peripheral
-
-
-			// TODO remove these after testing:
-			| BIT4 | BIT3
-			| BIT2 // Transfer error interrupt enable TODO remove this after testing
-			| BIT1
 			;
 
 	// TODO: Mburst?
@@ -81,7 +76,11 @@ void dma_init(waveform_t* p_waveform) {
 	DMA1_Stream1->PAR = (uint32_t) &(DAC->DHR12R1); // DAC_DHR12R1 address
 	DMA1_Stream1->M0AR = (uint32_t) &(waveform->samples);
 
-	DMA1_Stream1->FCR |= BIT7 // enable fifo error interrupt
+
+	DMA1_Stream1->FCR |=
+			// BIT7 // enable fifo error interrupt
+			BIT2 // direct mode disabled
+			| BIT1 // Threshold 3/4 fifo
 			;
 
 
@@ -94,6 +93,22 @@ void dma_init(waveform_t* p_waveform) {
 void dma_stop()
 {
 	DMA1_Stream1->CR &= ~BIT0;
+	while (DMA1_Stream1->CR & BIT0) {};
+
+	// clear previous interrupt flags
+	DMA1->LIFCR |= (0b1111 << 24) |
+			(0b11111 << 18) |
+			(0b1 << 16) |
+			(0b1111 << 8) |
+			(0b11111 << 2) |
+			(0b1);
+	DMA1->HIFCR |= (0b1111 << 24) |
+			(0b11111 << 18) |
+			(0b1 << 16) |
+			(0b1111 << 8) |
+			(0b11111 << 2) |
+			(0b1);
+
 }
 
 void dma_start()
