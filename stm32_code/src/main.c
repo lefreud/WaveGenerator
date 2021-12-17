@@ -49,23 +49,10 @@ SOFTWARE.
 */
 int main(void)
 {
-  uart_init_uart();
-  dac_init();
-  dma_init();
-
-  char latest_byte;
-  uint32_t i = 0;
-  waveform_t wave = {
-	  .used_size = 1
-  };
+  command_parser_init();
+  command_parser_start();
 
   while (1)
   {
-	  dac_value(wave.samples[i]);
-	  i = (i + 1) % wave.used_size;
-	  if (uart_get_received_byte(&latest_byte)) {
-		  command_parser_push_byte(latest_byte);
-		  command_parser_get_latest_waveform(&wave);
-	  }
   }
 }

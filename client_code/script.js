@@ -41,7 +41,8 @@ async function connect() {
 }
 
 async function uploadWaveform(selectedSampleCount) {
-    let waveform = null;
+    // generate
+    let waveform;
     switch (waveformTypeElement().value) {
         case "square":
             waveform = getSquareWaveform();
@@ -49,8 +50,17 @@ async function uploadWaveform(selectedSampleCount) {
         case "triangle":
             waveform = getTriangleWaveform();
             break;
+        case "sine":
+            waveform = getSineWaveform();
+            break;
+        default:
+            waveform = getSineWaveform();
     }
+
+    // display
     displayWaveform(waveform);
+
+    // send data
     if (writer) {
         const usedSize = selectedSampleCount;
         const commandBuffer = new ArrayBuffer(COMMAND_BUFFER_SIZE);
@@ -112,6 +122,14 @@ function getTriangleWaveform() {
     }
     for (let i = 0; i < halfPeriod; i++) {
         waveform.push(Math.floor(MAX_DAC_VALUE * (halfPeriod - i) / halfPeriod));
+    }
+    return waveform;
+}
+
+function getSineWaveform() {
+    let waveform = [];
+    for (let i = 0; i < selectedSampleCount; i++) {
+        waveform.push(MAX_DAC_VALUE / 2 + MAX_DAC_VALUE / 2 * Math.sin(i * 2 * Math.PI / selectedSampleCount))
     }
     return waveform;
 }

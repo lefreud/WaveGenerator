@@ -1,10 +1,16 @@
 #include "command_parser.h"
 #include "string.h"
+#include "dma.h"
+#include "uart.h"
+#include "dac.h"
+#include "waveform.h"
 
 typedef enum {
+	INIT,
 	READY,
+	STOP_DMA,
 	RECEIVING,
-	DONE
+	START_DMA
 } command_parser_state_t;
 
 #define COMMAND_BUFFER_SIZE (2 + SAMPLES_BUFFER_SIZE * 2)
@@ -30,49 +36,60 @@ static void feed_watchdog();
  */
 
 void command_parser_init() {
-	state = READY;
 	command_buffer_index = 0;
 
 	// TODO: start watchdog timer
 	init_watchdog();
+	state = INIT;
 }
 
 static void init_watchdog() {
 	// TODO
 }
 
-void command_parser_push_byte(uint8_t byte) {
+void command_parser_start() {
 	feed_watchdog();
 
-	switch (state) {
-	case READY:
-		if (byte == START_BYTE) {
-			state = RECEIVING;
+	char latest_byte;
+	while (1) {
+		switch (state) {
+			case INIT:
+				uart_init_uart();
+				dac_init();
+				dma_init((waveform_t*) command_buffer);
+				state = READY;
+				break;
+			case READY:
+				if (uart_get_received_byte(&latest_byte)) {
+					if (latest_byte == START_BYTE) {
+						state = STOP_DMA;
+					}
+				}
+				break;
+			case STOP_DMA:
+				dma_stop();
+				state = RECEIVING;
+				break;
+			case RECEIVING:
+				if (uart_get_received_byte(&latest_byte)) {
+					command_buffer[command_buffer_index++] = latest_byte;
+					if (command_buffer_index >= COMMAND_BUFFER_SIZE) {
+						state = START_DMA;
+					}
+				}
+				break;
+			case START_DMA:
+				dma_start();
+				state = READY;
+				break;
+			default:
+				state = INIT;
+				break;
 		}
-		break;
-	case RECEIVING:
-		command_buffer[command_buffer_index++] = byte;
-		if (command_buffer_index >= COMMAND_BUFFER_SIZE) {
-			state = DONE;
-		}
-		break;
-	case DONE:
-		if (byte == START_BYTE) {
-			state = RECEIVING;
-		}
-		break;
-	default:
-		break;
 	}
+
 }
 
 static void feed_watchdog() {
 	// TODO
-}
-
-int command_parser_get_latest_waveform(waveform_t* latest_waveform) {
-	if (state == DONE) {
-		memcpy(latest_waveform, command_buffer, COMMAND_BUFFER_SIZE);
-	}
-	return 0;
 }
